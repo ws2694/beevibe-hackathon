@@ -70,7 +70,11 @@ Filter options: `{ tools: ['SLACK_SEND_MESSAGE'] }`, `{ search: 'create issue' }
 const result = await composio.tools.execute('GITHUB_CREATE_ISSUE', {
   userId,
   version: '20250909_00',
-  arguments: { owner: 'beevibe-ai', repo: 'beevibe', title: 'Bug: ...' },
+  arguments: {
+    owner: process.env.GITHUB_OWNER ?? 'ws2694',
+    repo: process.env.GITHUB_REPO ?? 'beevibe-hackathon',
+    title: 'Bug: ...',
+  },
 });
 // result: { data, error, successful, logId }
 ```
