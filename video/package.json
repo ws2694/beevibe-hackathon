@@ -1,0 +1,32 @@
+{
+  "name": "beevibe-launch-video",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Remotion-driven launch/demo video for the Beevibe product. Wraps the 5 source .mov screen recordings with intro, scene labels, callouts, and outro.",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render src/index.ts BeevibeLaunch out/beevibe-launch-1080.mp4 --codec=h264",
+    "render:720": "remotion render src/index.ts BeevibeLaunch out/beevibe-launch-720.mp4 --codec=h264 --width=1280 --height=720",
+    "render:gif": "remotion render src/index.ts BeevibeLaunch out/beevibe-launch.gif --codec=gif",
+    "render:scenes": "for s in general assign ask negotiate escalation; do remotion render src/index.ts scene-$s out/scenes/$s.webm --codec=vp9; done",
+    "render:scene-general": "remotion render src/index.ts scene-general out/scenes/general.webm --codec=vp9",
+    "render:scene-assign": "remotion render src/index.ts scene-assign out/scenes/assign.webm --codec=vp9",
+    "render:scene-ask": "remotion render src/index.ts scene-ask out/scenes/ask.webm --codec=vp9",
+    "render:scene-negotiate": "remotion render src/index.ts scene-negotiate out/scenes/negotiate.webm --codec=vp9",
+    "render:scene-escalation": "remotion render src/index.ts scene-escalation out/scenes/escalation.webm --codec=vp9",
+    "still": "remotion still src/index.ts BeevibeLaunch out/still.jpg --jpeg-quality=85"
+  },
+  "dependencies": {
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "^4.0.0",
+    "@remotion/bundler": "^4.0.0",
+    "@remotion/cli": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.5.0"
+  }
+}

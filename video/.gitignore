@@ -1,0 +1,8 @@
+node_modules/
+out/
+.DS_Store
+
+# Hardlinked source clips — these are huge demo recordings that live in
+# the developer's local Downloads folder. Re-create via README.
+public/clips/*.mov
+public/music.mp3

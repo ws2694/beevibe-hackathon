@@ -1,0 +1,54 @@
+{
+  "name": "beevibe",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Beevibe core — modular monolith for agent runtime (MCP server + scheduler + daemon + shared library)",
+  "license": "Apache-2.0",
+  "author": "Zhe Pang",
+  "homepage": "https://github.com/beevibe-ai/beevibe",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beevibe-ai/beevibe.git"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "dev": "bash scripts/dev.sh",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test --concurrency=1 && vitest run scripts/",
+    "clean": "turbo clean && rm -rf node_modules",
+    "migrate": "node-pg-migrate --envPath .env",
+    "migrate:deploy": "node-pg-migrate",
+    "migrate:test": "node-pg-migrate --envPath .env -d DATABASE_URL_TEST",
+    "db:reset": "docker compose down -v && docker compose up -d --wait postgres && pnpm migrate up",
+    "install-skills": "tsx scripts/install-skills.ts",
+    "adr:visual": "tsx scripts/adr-visual-report.ts",
+    "adr:slides": "tsx scripts/adr-slide-deck.ts",
+    "bootstrap": "tsx scripts/init.ts",
+    "provision-user": "tsx scripts/provision-user.ts",
+    "sync-core-memory": "tsx scripts/sync-core-memory-descriptions.ts",
+    "daemon": "tsx packages/daemon/src/main.ts"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@types/express": "^5.0.6",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "dotenv": "^17.4.2",
+    "eslint": "^8.57.0",
+    "eslint-import-resolver-typescript": "^3.6.3",
+    "eslint-plugin-import": "^2.30.0",
+    "express": "^5.2.1",
+    "node-pg-migrate": "^7.7.1",
+    "pg": "^8.13.0",
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.1",
+    "turbo": "^2.1.3",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.9"
+  }
+}

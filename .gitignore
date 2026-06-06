@@ -1,0 +1,17 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.turbo/
+.next/
+coverage/
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.log
+.vscode/
+.idea/
+.claude/
+.gstack/
+.vercel/
+agent_*/

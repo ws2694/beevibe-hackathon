@@ -1,0 +1,1026 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Paper tint: pure white reads as untouched template; the warm
+       cream gives cards somewhere to sit and harmonizes with the
+       yellow primary (which dominates dark mode brand chrome). Hue
+       40 = warm cream, ~5% saturation, ~98% lightness = #fbf9f5-ish.
+       Cards lift slightly above the page (97% L). Borders pick up a
+       trace of warmth too so they don't read cool against the page. */
+    --background: 40 30% 98%;
+    --foreground: 240 10% 4%;
+    --card: 40 25% 97%;
+    --card-foreground: 240 10% 4%;
+    --popover: 40 30% 99%;
+    --popover-foreground: 240 10% 4%;
+    --primary: 48 96% 53%;
+    --primary-foreground: 240 10% 4%;
+    --secondary: 40 12% 94%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 40 12% 94%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 40 12% 94%;
+    --accent-foreground: 240 6% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 40 10% 88%;
+    --input: 40 10% 88%;
+    --ring: 47 96% 47%;
+    --radius: 0.375rem;
+
+    --status-pending: 240 4% 46%;
+    --status-running: 217 91% 60%;
+    --status-review: 38 92% 50%;
+    --status-blocked: 25 95% 53%;
+    --status-done: 160 84% 39%;
+    --status-failed: 0 84% 60%;
+    --status-cancelled: 240 4% 46%;
+
+    --hier-ic: 240 4% 46%;
+    --hier-team: var(--primary);
+    --hier-org: 38 92% 50%;
+
+    --type-belief-bg: 240 5% 92%;
+    --type-belief-fg: 240 6% 30%;
+    --type-pattern-bg: 217 80% 92%;
+    --type-pattern-fg: 217 80% 35%;
+    --type-gotcha-bg: 25 90% 92%;
+    --type-gotcha-fg: 25 80% 35%;
+    --type-preference-bg: 262 60% 94%;
+    --type-preference-fg: 262 60% 40%;
+    --type-decision-bg: 160 50% 92%;
+    --type-decision-fg: 160 70% 25%;
+  }
+
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 6% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 6% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 48 96% 53%;
+    --primary-foreground: 240 10% 4%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 63% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 48 96% 53%;
+
+    --type-belief-bg: 240 4% 18%;
+    --type-belief-fg: 240 5% 75%;
+    --type-pattern-bg: 217 60% 22%;
+    --type-pattern-fg: 217 91% 75%;
+    --type-gotcha-bg: 25 60% 22%;
+    --type-gotcha-fg: 25 95% 70%;
+    --type-preference-bg: 262 50% 24%;
+    --type-preference-fg: 262 80% 80%;
+    --type-decision-bg: 160 50% 18%;
+    --type-decision-fg: 160 70% 65%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+    /* Aurora wallpaper — three offset radial gradients give the body
+       enough varied color for glass-surface elements (sidebar, popovers,
+       composers, message bubbles) to actually look glassy. Without this,
+       backdrop-filter has only flat color to blur and reads as tinted
+       solid. Fixed attachment so the field doesn't scroll with content. */
+    background-image:
+      radial-gradient(ellipse 60vw 50vh at 18% 22%, hsla(48, 95%, 55%, 0.08), transparent 65%),
+      radial-gradient(ellipse 65vw 55vh at 82% 78%, hsla(220, 75%, 55%, 0.07), transparent 65%),
+      radial-gradient(ellipse 50vw 45vh at 50% 50%, hsla(180, 65%, 50%, 0.04), transparent 70%);
+    background-attachment: fixed;
+  }
+  .dark body {
+    background-image:
+      radial-gradient(ellipse 60vw 50vh at 18% 22%, hsla(48, 95%, 55%, 0.10), transparent 65%),
+      radial-gradient(ellipse 65vw 55vh at 82% 78%, hsla(220, 75%, 60%, 0.10), transparent 65%),
+      radial-gradient(ellipse 50vw 45vh at 50% 50%, hsla(160, 70%, 50%, 0.06), transparent 70%);
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: var(--radius);
+  }
+}
+
+.timeline-rail {
+  position: relative;
+}
+.timeline-rail::before {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: hsl(var(--border));
+}
+
+/* Pearl button — sidebar New chat CTA. Adapted from Uiverse.io by
+   marcelodolza for light-mode chrome: warm-cream body with white
+   sheen and a soft warm drop shadow. The .wrap pseudo-elements
+   render the glossy top cap and the rising under-glow on hover. */
+.pearl-button {
+  --pearl-bg: #f3ecde;
+  --pearl-text: #2a2a2a;
+  --pearl-radius: 100px;
+  outline: none;
+  cursor: pointer;
+  border: 0;
+  position: relative;
+  border-radius: var(--pearl-radius);
+  background-color: var(--pearl-bg);
+  transition: all 0.2s ease;
+  box-shadow:
+    inset 0 0.2rem 0.6rem rgba(255, 255, 255, 0.9),
+    inset 0 -0.08rem 0.25rem rgba(120, 90, 60, 0.2),
+    inset 0 -0.3rem 0.6rem rgba(255, 255, 255, 0.65),
+    0 1rem 1.5rem rgba(120, 90, 60, 0.15),
+    0 0.4rem 0.6rem -0.3rem rgba(120, 90, 60, 0.25);
+}
+.dark .pearl-button {
+  --pearl-bg: #1a1a1c;
+  --pearl-text: rgba(255, 255, 255, 0.78);
+  box-shadow:
+    inset 0 0.3rem 0.9rem rgba(255, 255, 255, 0.28),
+    inset 0 -0.1rem 0.3rem rgba(0, 0, 0, 0.7),
+    inset 0 -0.4rem 0.9rem rgba(255, 255, 255, 0.4),
+    0 1rem 1.5rem rgba(0, 0, 0, 0.4),
+    0 0.4rem 0.6rem -0.3rem rgba(0, 0, 0, 0.6);
+}
+.pearl-button .wrap {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--pearl-text);
+  padding: 12px 20px;
+  border-radius: inherit;
+  position: relative;
+  overflow: hidden;
+}
+.pearl-button .wrap p span:nth-child(2) {
+  display: none;
+}
+.pearl-button:hover .wrap p span:nth-child(1) {
+  display: none;
+}
+.pearl-button:hover .wrap p span:nth-child(2) {
+  display: inline-block;
+}
+.pearl-button .wrap p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  transition: all 0.2s ease;
+  transform: translateY(2%);
+  mask-image: linear-gradient(to bottom, white 55%, transparent);
+}
+.pearl-button .wrap::before,
+.pearl-button .wrap::after {
+  content: "";
+  position: absolute;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+.pearl-button .wrap::before {
+  left: -15%;
+  right: -15%;
+  bottom: 25%;
+  top: -100%;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.55);
+}
+.dark .pearl-button .wrap::before {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+.pearl-button .wrap::after {
+  left: 6%;
+  right: 6%;
+  top: 12%;
+  bottom: 40%;
+  border-radius: 22px 22px 0 0;
+  box-shadow: inset 0 10px 8px -10px rgba(255, 255, 255, 0.9);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+.dark .pearl-button .wrap::after {
+  box-shadow: inset 0 10px 8px -10px rgba(255, 255, 255, 0.8);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+.pearl-button:hover {
+  box-shadow:
+    inset 0 0.2rem 0.45rem rgba(255, 255, 255, 0.95),
+    inset 0 -0.08rem 0.25rem rgba(120, 90, 60, 0.22),
+    inset 0 -0.3rem 0.6rem rgba(255, 255, 255, 0.8),
+    0 1rem 1.5rem rgba(120, 90, 60, 0.18),
+    0 0.4rem 0.6rem -0.3rem rgba(120, 90, 60, 0.28);
+}
+.dark .pearl-button:hover {
+  box-shadow:
+    inset 0 0.3rem 0.5rem rgba(255, 255, 255, 0.4),
+    inset 0 -0.1rem 0.3rem rgba(0, 0, 0, 0.7),
+    inset 0 -0.4rem 0.9rem rgba(255, 255, 255, 0.6),
+    0 1rem 1.5rem rgba(0, 0, 0, 0.4),
+    0 0.4rem 0.6rem -0.3rem rgba(0, 0, 0, 0.6);
+}
+.pearl-button:hover .wrap::before {
+  transform: translateY(-5%);
+}
+.pearl-button:hover .wrap::after {
+  opacity: 0.4;
+  transform: translateY(5%);
+}
+.pearl-button:hover .wrap p {
+  transform: translateY(-4%);
+}
+.pearl-button:active {
+  transform: translateY(2px);
+}
+
+/* ── Glass surface utilities ──────────────────────────────────────────
+   Frosted-glass treatment that pairs with the .glassy-chip / .glassy-send
+   pearl buttons so the surrounding chrome reads as part of the same
+   material instead of solid blocks against shiny pearls.
+
+   Use `.glass-surface` for popovers, composers, peek panels — anything
+   that hosts content. Use `.glass-bubble-agent` / `.glass-bubble-user`
+   for chat message bubbles. All three need a non-solid backdrop behind
+   them to read correctly; the chat surface's gradient + the sidebar's
+   `bg-card` both qualify. */
+.glass-surface {
+  background-color: hsl(var(--card) / 0.55);
+  /* Apple Liquid Glass cues: heavy blur picks up backdrop variation, the
+     saturate boost makes whatever color is behind read vividly through
+     the glass (the trick that makes Apple Materials look "alive" against
+     wallpapers). Inset top highlight is the refractive lip — 1px white
+     stroke at the top edge simulating light catching the glass. */
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid hsl(var(--border) / 0.55);
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.08);
+}
+.dark .glass-surface {
+  background-color: hsl(var(--card) / 0.4);
+  border-color: hsl(var(--border) / 0.55);
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06);
+}
+/* Fallback for browsers without backdrop-filter (older Firefox): bump
+   alpha so the surface stays legible without the blur trick. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-surface { background-color: hsl(var(--card) / 0.95); }
+  .dark .glass-surface { background-color: hsl(var(--card) / 0.92); }
+}
+
+/* Agent message — neutral translucent bubble. Drops the solid
+   bg-secondary block in favor of a frosted variant that lets the
+   gradient backdrop bleed through. */
+.glass-bubble-agent {
+  background-color: hsl(var(--secondary) / 0.5);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: hsl(var(--foreground));
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06);
+}
+.dark .glass-bubble-agent {
+  background-color: hsl(var(--secondary) / 0.4);
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.05);
+}
+
+/* User message — replaces the saturated bg-primary yellow with a low-
+   opacity tint + brand-colored border. Brand reads as accent instead
+   of dominating the column; short prompts stop looking like billboards. */
+.glass-bubble-user {
+  background-color: hsl(var(--primary) / 0.14);
+  border: 1px solid hsl(var(--primary) / 0.4);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  color: hsl(var(--foreground));
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.08);
+}
+.dark .glass-bubble-user {
+  background-color: hsl(var(--primary) / 0.12);
+  border-color: hsl(var(--primary) / 0.45);
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-bubble-agent { background-color: hsl(var(--secondary) / 0.9); }
+  .glass-bubble-user { background-color: hsl(var(--primary) / 0.22); }
+}
+
+/* Slide-in for bottom-right toasts (memory-toast-host). Mirrors the
+   iOS notification slide — soft ease, short distance. Disabled under
+   prefers-reduced-motion so the toast still appears, just without the
+   whoosh. */
+@keyframes toast-in {
+  from { transform: translate(8%, 12%); opacity: 0; }
+  to   { transform: translate(0, 0);     opacity: 1; }
+}
+.animate-toast-in {
+  animation: toast-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast-in { animation: none; }
+}
+
+/* Agent avatar glass — tiny frosted badges for the generated DiceBear
+   robot marks. Uses per-hierarchy tint variables so team agents pick
+   up the primary theme color. */
+.agent-avatar-glass {
+  --agent-avatar-tint: var(--muted-foreground);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 0.55rem;
+  background:
+    linear-gradient(
+      145deg,
+      hsl(0 0% 100% / 0.76) 0%,
+      hsl(var(--agent-avatar-tint) / 0.18) 52%,
+      hsl(var(--card) / 0.42) 100%
+    ),
+    hsl(var(--agent-avatar-tint) / 0.12);
+  border: 1px solid hsl(0 0% 100% / 0.7);
+  backdrop-filter: blur(12px) saturate(165%);
+  -webkit-backdrop-filter: blur(12px) saturate(165%);
+  box-shadow:
+    inset 0 0.16rem 0.32rem hsl(0 0% 100% / 0.72),
+    inset 0 -0.08rem 0.22rem hsl(var(--agent-avatar-tint) / 0.16),
+    0 0.32rem 0.7rem hsl(var(--agent-avatar-tint) / 0.16);
+}
+.person-avatar-glass {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      145deg,
+      hsl(0 0% 100% / 0.7) 0%,
+      hsl(211 70% 55% / 0.14) 50%,
+      hsl(var(--primary) / 0.18) 100%
+    ),
+    hsl(var(--secondary));
+  border: 1px solid hsl(0 0% 100% / 0.62);
+  box-shadow:
+    inset 0 0.14rem 0.3rem hsl(0 0% 100% / 0.62),
+    inset 0 -0.08rem 0.2rem hsl(220 20% 20% / 0.12),
+    0 0.28rem 0.64rem hsl(220 28% 30% / 0.12);
+}
+.agent-avatar-glass::before,
+.person-avatar-glass::before {
+  content: "";
+  position: absolute;
+  inset: 9% 13% auto;
+  height: 34%;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    hsl(0 0% 100% / 0.72),
+    hsl(0 0% 100% / 0)
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+.dicebear-avatar-image {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: saturate(0.96) contrast(1.02) drop-shadow(0 1px 0 hsl(0 0% 100% / 0.34));
+}
+.agent-avatar-glass-ic {
+  --agent-avatar-tint: 211 70% 55%;
+}
+.agent-avatar-glass-team {
+  --agent-avatar-tint: var(--primary);
+  background:
+    linear-gradient(
+      145deg,
+      hsl(50 100% 88% / 0.9) 0%,
+      hsl(var(--primary) / 0.42) 58%,
+      hsl(38 92% 46% / 0.18) 100%
+    ),
+    hsl(var(--primary) / 0.26);
+  border-color: hsl(42 90% 42% / 0.38);
+  box-shadow:
+    inset 0 0.16rem 0.32rem hsl(0 0% 100% / 0.56),
+    inset 0 -0.08rem 0.22rem hsl(35 90% 30% / 0.18),
+    0 0.26rem 0.62rem hsl(var(--primary) / 0.18);
+}
+.agent-avatar-glass-org {
+  --agent-avatar-tint: 32 92% 52%;
+}
+.dark .agent-avatar-glass {
+  background:
+    linear-gradient(
+      145deg,
+      hsl(0 0% 100% / 0.22) 0%,
+      hsl(var(--agent-avatar-tint) / 0.18) 52%,
+      hsl(var(--card) / 0.36) 100%
+    ),
+    hsl(var(--agent-avatar-tint) / 0.13);
+  border-color: hsl(0 0% 100% / 0.14);
+  box-shadow:
+    inset 0 0.18rem 0.36rem hsl(0 0% 100% / 0.18),
+    inset 0 -0.08rem 0.24rem hsl(0 0% 0% / 0.32),
+    0 0.35rem 0.8rem hsl(0 0% 0% / 0.28);
+}
+.dark .person-avatar-glass {
+  background:
+    linear-gradient(
+      145deg,
+      hsl(0 0% 100% / 0.18) 0%,
+      hsl(211 70% 55% / 0.16) 52%,
+      hsl(var(--primary) / 0.16) 100%
+    ),
+    hsl(var(--secondary));
+  border-color: hsl(0 0% 100% / 0.14);
+  box-shadow:
+    inset 0 0.18rem 0.34rem hsl(0 0% 100% / 0.16),
+    inset 0 -0.08rem 0.24rem hsl(0 0% 0% / 0.3),
+    0 0.35rem 0.8rem hsl(0 0% 0% / 0.24);
+}
+.dark .agent-avatar-glass-team {
+  background:
+    linear-gradient(
+      145deg,
+      hsl(50 100% 84% / 0.28) 0%,
+      hsl(var(--primary) / 0.46) 58%,
+      hsl(var(--card) / 0.28) 100%
+    ),
+    hsl(var(--primary) / 0.28);
+  border-color: hsl(var(--primary) / 0.36);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .agent-avatar-glass { background-color: hsl(var(--agent-avatar-tint) / 0.16); }
+  .agent-avatar-glass-team { background-color: hsl(var(--primary) / 0.42); }
+}
+
+/* Orbit map focus — keep a soft primary glow behind the caller's own
+   team without turning the canvas into a literal stacked 3D model. */
+.network-orbit-layer {
+  position: absolute;
+}
+.network-orbit-layer-self {
+  z-index: 20;
+}
+.network-orbit-layer-self::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 9999px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  width: min(760px, 82vw);
+  height: min(760px, 82vw);
+  background: radial-gradient(circle, hsl(var(--primary) / 0.16), transparent 68%);
+  filter: blur(30px);
+  opacity: 0.72;
+  z-index: -2;
+}
+.network-orbit-layer-peer {
+  z-index: 4;
+}
+.dark .network-orbit-layer-self::before {
+  background: radial-gradient(circle, hsl(var(--primary) / 0.18), transparent 68%);
+}
+
+/* Glassy chip — scaled-down pearl for the active sidebar tab. Same
+   cream body and sheen as .pearl-button, but with the chrome dialed
+   back so it sits comfortably inline next to icon-only inactive
+   tabs instead of dominating them. */
+.glassy-chip {
+  background-color: #f3ecde;
+  color: #2a2a2a;
+  border: 0;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow:
+    inset 0 0.15rem 0.4rem rgba(255, 255, 255, 0.85),
+    inset 0 -0.05rem 0.18rem rgba(120, 90, 60, 0.18),
+    inset 0 -0.2rem 0.45rem rgba(255, 255, 255, 0.5),
+    0 0.45rem 0.8rem rgba(120, 90, 60, 0.14),
+    0 0.2rem 0.35rem -0.15rem rgba(120, 90, 60, 0.22);
+}
+.dark .glassy-chip {
+  background-color: #1a1a1c;
+  color: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 0.18rem 0.55rem rgba(255, 255, 255, 0.22),
+    inset 0 -0.06rem 0.2rem rgba(0, 0, 0, 0.7),
+    inset 0 -0.25rem 0.55rem rgba(255, 255, 255, 0.32),
+    0 0.5rem 0.9rem rgba(0, 0, 0, 0.35),
+    0 0.2rem 0.35rem -0.15rem rgba(0, 0, 0, 0.5);
+}
+
+/* Glassy send — primary-tinted (yellow) version of the pearl
+   treatment for the chat / room send button. Border radius comes
+   from the consumer (rounded-full vs rounded) so the same class
+   serves both round and square send affordances. */
+.glassy-send {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: 0;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  box-shadow:
+    inset 0 0.15rem 0.35rem rgba(255, 255, 255, 0.55),
+    inset 0 -0.05rem 0.18rem rgba(120, 80, 0, 0.3),
+    inset 0 -0.2rem 0.4rem rgba(255, 255, 255, 0.3),
+    0 0.4rem 0.7rem rgba(120, 80, 0, 0.22),
+    0 0.18rem 0.3rem -0.12rem rgba(120, 80, 0, 0.3);
+}
+.glassy-send:hover:not(:disabled) {
+  box-shadow:
+    inset 0 0.15rem 0.4rem rgba(255, 255, 255, 0.7),
+    inset 0 -0.05rem 0.18rem rgba(120, 80, 0, 0.32),
+    inset 0 -0.2rem 0.45rem rgba(255, 255, 255, 0.45),
+    0 0.45rem 0.8rem rgba(120, 80, 0, 0.28),
+    0 0.2rem 0.35rem -0.12rem rgba(120, 80, 0, 0.36);
+}
+.glassy-send:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.glassy-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Cyber agent card — compact system card for orbit-canvas nodes.
+   The palette follows Beevibe's honey primary with blue/slate support
+   colors. */
+.cyber-card {
+  --cyber-edge: hsl(var(--primary) / 0.5);
+  --cyber-edge-strong: hsl(var(--primary) / 0.86);
+  --cyber-blue: 96 165 250;
+  --cyber-text: hsl(224 24% 17%);
+  --cyber-muted: hsl(218 16% 42%);
+  --cyber-title-start: hsl(38 92% 32%);
+  --cyber-title-end: hsl(211 78% 42%);
+  position: relative;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 14% 12%, hsl(var(--primary) / 0.22), transparent 34%),
+    radial-gradient(circle at 85% 78%, hsl(var(--cyber-blue) / 0.18), transparent 42%),
+    linear-gradient(135deg, hsl(40 25% 97% / 0.98), hsl(213 22% 91% / 0.94));
+  border: 1.5px solid hsl(var(--primary) / 0.22);
+  overflow: hidden;
+  color: var(--cyber-text);
+  box-shadow:
+    0 10px 24px hsl(220 28% 30% / 0.12),
+    inset 0 1px 0 hsl(0 0% 100% / 0.72),
+    inset 0 -1px 0 hsl(var(--primary) / 0.1);
+  transition: transform 150ms ease-out, box-shadow 300ms, filter 300ms;
+  transform-style: preserve-3d;
+}
+.cyber-card:hover {
+  box-shadow:
+    0 14px 30px hsl(220 28% 30% / 0.16),
+    0 0 18px hsl(var(--primary) / 0.16),
+    inset 0 1px 0 hsl(0 0% 100% / 0.82);
+}
+.dark .cyber-card {
+  --cyber-edge: hsl(var(--primary) / 0.42);
+  --cyber-edge-strong: hsl(var(--primary) / 0.9);
+  --cyber-blue: 59 130 246;
+  --cyber-text: hsl(0 0% 98% / 0.88);
+  --cyber-muted: hsl(220 14% 72% / 0.68);
+  --cyber-title-start: hsl(var(--primary));
+  --cyber-title-end: hsl(205 90% 72%);
+  background:
+    radial-gradient(circle at 14% 12%, hsl(var(--primary) / 0.14), transparent 34%),
+    radial-gradient(circle at 85% 80%, hsl(var(--cyber-blue) / 0.14), transparent 42%),
+    linear-gradient(145deg, hsl(220 18% 15% / 0.96), hsl(220 16% 9% / 0.96));
+  border: 1.5px solid hsl(var(--primary) / 0.18);
+  color: var(--cyber-text);
+  box-shadow:
+    0 16px 30px hsl(0 0% 0% / 0.36),
+    inset 0 1px 0 hsl(0 0% 100% / 0.08),
+    inset 0 0 20px hsl(0 0% 0% / 0.16);
+}
+.dark .cyber-card:hover {
+  filter: brightness(1.08);
+  box-shadow:
+    0 16px 30px hsl(0 0% 0% / 0.38),
+    0 0 20px hsl(var(--primary) / 0.12),
+    inset 0 1px 0 hsl(0 0% 100% / 0.1);
+}
+.cyber-card::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  background: radial-gradient(
+    circle at center,
+    hsl(var(--primary) / 0.22) 0%,
+    hsl(var(--cyber-blue) / 0.1) 50%,
+    transparent 100%
+  );
+  filter: blur(20px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.cyber-card:hover::before {
+  opacity: 1;
+}
+.dark .cyber-card::before {
+  background: radial-gradient(
+    circle at center,
+    hsl(var(--primary) / 0.15) 0%,
+    hsl(var(--cyber-blue) / 0.1) 50%,
+    transparent 100%
+  );
+}
+.cyber-card .cyber-glare {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.25) 45%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0.25) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0;
+  transition: opacity 300ms;
+  pointer-events: none;
+}
+.cyber-card:hover .cyber-glare {
+  opacity: 0.7;
+}
+.dark .cyber-card .cyber-glare {
+  background: linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.04) 45%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.04) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+.dark .cyber-card:hover .cyber-glare {
+  opacity: 1;
+}
+.cyber-card .cyber-corners span {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--cyber-edge);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  pointer-events: none;
+}
+.cyber-card:hover .cyber-corners span {
+  border-color: var(--cyber-edge-strong);
+  box-shadow: 0 0 8px hsl(var(--primary) / 0.36);
+}
+.dark .cyber-card .cyber-corners span {
+  border-color: var(--cyber-edge);
+}
+.dark .cyber-card:hover .cyber-corners span {
+  border-color: var(--cyber-edge-strong);
+  box-shadow: 0 0 8px hsl(var(--primary) / 0.36);
+}
+.cyber-card .cyber-corners span:nth-child(1) {
+  top: 6px;
+  left: 6px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.cyber-card .cyber-corners span:nth-child(2) {
+  top: 6px;
+  right: 6px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.cyber-card .cyber-corners span:nth-child(3) {
+  bottom: 6px;
+  left: 6px;
+  border-right: 0;
+  border-top: 0;
+}
+.cyber-card .cyber-corners span:nth-child(4) {
+  bottom: 6px;
+  right: 6px;
+  border-left: 0;
+  border-top: 0;
+}
+.cyber-card .cyber-scan {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    hsl(var(--primary) / 0.12),
+    transparent
+  );
+  transform: translateY(-100%);
+  animation: cyber-scan 3s linear infinite;
+  pointer-events: none;
+}
+.cyber-card .cyber-lines span {
+  position: absolute;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--cyber-blue) / 0.34),
+    transparent
+  );
+}
+.dark .cyber-card .cyber-lines span {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--cyber-blue) / 0.32),
+    transparent
+  );
+}
+.cyber-card .cyber-lines span:nth-child(1) {
+  top: 30%;
+  left: 0;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: cyber-line 4s linear infinite;
+}
+.cyber-card .cyber-lines span:nth-child(2) {
+  top: 70%;
+  right: 0;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: right;
+  animation: cyber-line 4s linear infinite 2s;
+}
+.cyber-card .cyber-title {
+  background: linear-gradient(45deg, var(--cyber-title-start), var(--cyber-title-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.dark .cyber-card .cyber-title {
+  background: linear-gradient(45deg, var(--cyber-title-start), var(--cyber-title-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* Themed badge + footer text — readable on both light and dark
+   cyber backgrounds. The accent variant is used for the right-side
+   stats so they pop slightly against the muted body text. */
+.cyber-card .cyber-badge {
+  color: hsl(38 92% 34%);
+}
+.cyber-card .cyber-footer {
+  color: var(--cyber-muted);
+}
+.cyber-card .cyber-footer-accent {
+  color: hsl(211 78% 38%);
+}
+.dark .cyber-card .cyber-badge,
+.dark .cyber-card .cyber-footer-accent {
+  color: hsl(var(--primary) / 0.76);
+}
+.dark .cyber-card .cyber-footer {
+  color: var(--cyber-muted);
+}
+@keyframes cyber-scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+@keyframes cyber-line {
+  0% { transform: scaleX(0); opacity: 0; }
+  50% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(0); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cyber-card .cyber-scan,
+  .cyber-card .cyber-lines span {
+    animation: none !important;
+  }
+}
+
+@keyframes wizard-step {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-breathe,
+  .animate-spin-slow,
+  .animate-row-flash {
+    animation: none !important;
+  }
+  .bv-chat-loader .solid {
+    animation: none !important;
+  }
+}
+
+
+/* ── Chat icosahedron loader — see components/chat/chat-loader.tsx ─────
+   20-sided polyhedron built from CSS-border triangles. Each face is an
+   absolutely-positioned 0×0 div with a tall solid border-bottom and
+   transparent left/right borders, then rotated into place around the
+   centre. The whole solid spins on three axes via the `bv-solid-spin`
+   keyframe.
+
+   Scoped under `.bv-chat-loader` so `.solid` / `.side` can't leak
+   into other surfaces. Adapted from a Uiverse loader; ported off
+   styled-components to fit the project's globals.css pattern. */
+.bv-chat-loader {
+  /* --bv-loader-s drives every internal dimension via calc(); set it
+     once and the whole solid scales. Default 40px works at the empty
+     reply-column entry; compact variant below shrinks to 16px for the
+     inline "thinking…" indicator. */
+  --bv-loader-s: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--bv-loader-s);
+  height: var(--bv-loader-s);
+  perspective: calc(var(--bv-loader-s) * 6);
+  pointer-events: none;
+}
+.bv-chat-loader.compact { --bv-loader-s: 16px; }
+.bv-chat-loader .solid {
+  position: relative;
+  width: var(--bv-loader-s);
+  height: var(--bv-loader-s);
+  transform-style: preserve-3d;
+  animation: bv-solid-spin 16s infinite linear;
+}
+.bv-chat-loader .side {
+  position: absolute;
+  left: 0;
+  bottom: 50%;
+  border-bottom: calc(var(--bv-loader-s) * 0.866) solid black;
+  border-left: calc(var(--bv-loader-s) * 0.5) solid transparent;
+  border-right: calc(var(--bv-loader-s) * 0.5) solid transparent;
+  transform-origin: 50% 0%;
+}
+/* Top cap — 5 faces meeting at the apex. */
+.bv-chat-loader .side:nth-child(1)  { transform: translateY(calc(var(--bv-loader-s) * -0.0925)) rotateY(72deg)  rotateX(52.62deg); border-bottom-color: hsl(var(--primary) / 0.52); }
+.bv-chat-loader .side:nth-child(2)  { transform: translateY(calc(var(--bv-loader-s) * -0.0925)) rotateY(144deg) rotateX(52.62deg); border-bottom-color: hsl(211 78% 62% / 0.36); }
+.bv-chat-loader .side:nth-child(3)  { transform: translateY(calc(var(--bv-loader-s) * -0.0925)) rotateY(216deg) rotateX(52.62deg); border-bottom-color: hsl(220 14% 72% / 0.32); }
+.bv-chat-loader .side:nth-child(4)  { transform: translateY(calc(var(--bv-loader-s) * -0.0925)) rotateY(288deg) rotateX(52.62deg); border-bottom-color: hsl(var(--primary) / 0.4); }
+.bv-chat-loader .side:nth-child(5)  { transform: translateY(calc(var(--bv-loader-s) * -0.0925)) rotateY(360deg) rotateX(52.62deg); border-bottom-color: hsl(205 90% 72% / 0.3); }
+/* Bottom cap — mirrored 5 faces. */
+.bv-chat-loader .side:nth-child(6)  { transform: translateY(calc(var(--bv-loader-s) * 1.809)) rotateY(468deg) rotateX(127.38deg); border-bottom-color: hsl(38 92% 42% / 0.34); }
+.bv-chat-loader .side:nth-child(7)  { transform: translateY(calc(var(--bv-loader-s) * 1.809)) rotateY(540deg) rotateX(127.38deg); border-bottom-color: hsl(211 78% 62% / 0.28); }
+.bv-chat-loader .side:nth-child(8)  { transform: translateY(calc(var(--bv-loader-s) * 1.809)) rotateY(612deg) rotateX(127.38deg); border-bottom-color: hsl(var(--primary) / 0.42); }
+.bv-chat-loader .side:nth-child(9)  { transform: translateY(calc(var(--bv-loader-s) * 1.809)) rotateY(684deg) rotateX(127.38deg); border-bottom-color: hsl(220 14% 72% / 0.28); }
+.bv-chat-loader .side:nth-child(10) { transform: translateY(calc(var(--bv-loader-s) * 1.809)) rotateY(756deg) rotateX(127.38deg); border-bottom-color: hsl(205 90% 72% / 0.26); }
+/* Equator band — 5 upward + 5 downward triangles. */
+.bv-chat-loader .side:nth-child(11) { transform: translateY(calc(var(--bv-loader-s) * 0.433))  rotateY(828deg)  translateZ(calc(var(--bv-loader-s) * 0.8505)) rotateX(-10.81deg); border-bottom-color: hsl(var(--primary) / 0.5); }
+.bv-chat-loader .side:nth-child(12) { transform: translateY(calc(var(--bv-loader-s) * 0.433))  rotateY(900deg)  translateZ(calc(var(--bv-loader-s) * 0.8505)) rotateX(-10.81deg); border-bottom-color: hsl(211 78% 62% / 0.3); }
+.bv-chat-loader .side:nth-child(13) { transform: translateY(calc(var(--bv-loader-s) * 0.433))  rotateY(972deg)  translateZ(calc(var(--bv-loader-s) * 0.8505)) rotateX(-10.81deg); border-bottom-color: hsl(220 14% 72% / 0.3); }
+.bv-chat-loader .side:nth-child(14) { transform: translateY(calc(var(--bv-loader-s) * 0.433))  rotateY(1044deg) translateZ(calc(var(--bv-loader-s) * 0.8505)) rotateX(-10.81deg); border-bottom-color: hsl(38 92% 42% / 0.34); }
+.bv-chat-loader .side:nth-child(15) { transform: translateY(calc(var(--bv-loader-s) * 0.433))  rotateY(1116deg) translateZ(calc(var(--bv-loader-s) * 0.8505)) rotateX(-10.81deg); border-bottom-color: hsl(205 90% 72% / 0.26); }
+.bv-chat-loader .side:nth-child(16) { transform: translateY(calc(var(--bv-loader-s) * 1.2835)) rotateY(1152deg) rotateZ(180deg) translateZ(calc(var(--bv-loader-s) * 0.8505)) rotateX(-10.81deg); border-bottom-color: hsl(220 14% 72% / 0.28); }
+.bv-chat-loader .side:nth-child(17) { transform: translateY(calc(var(--bv-loader-s) * 1.2835)) rotateY(1224deg) rotateZ(180deg) translateZ(calc(var(--bv-loader-s) * 0.8505)) rotateX(-10.81deg); border-bottom-color: hsl(var(--primary) / 0.42); }
+.bv-chat-loader .side:nth-child(18) { transform: translateY(calc(var(--bv-loader-s) * 1.2835)) rotateY(1296deg) rotateZ(180deg) translateZ(calc(var(--bv-loader-s) * 0.8505)) rotateX(-10.81deg); border-bottom-color: hsl(211 78% 62% / 0.28); }
+.bv-chat-loader .side:nth-child(19) { transform: translateY(calc(var(--bv-loader-s) * 1.2835)) rotateY(1368deg) rotateZ(180deg) translateZ(calc(var(--bv-loader-s) * 0.8505)) rotateX(-10.81deg); border-bottom-color: hsl(38 92% 42% / 0.3); }
+.bv-chat-loader .side:nth-child(20) { transform: translateY(calc(var(--bv-loader-s) * 1.2835)) rotateY(1440deg) rotateZ(180deg) translateZ(calc(var(--bv-loader-s) * 0.8505)) rotateX(-10.81deg); border-bottom-color: hsl(205 90% 72% / 0.24); }
+@keyframes bv-solid-spin {
+  0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
+  100% { transform: rotateX(360deg) rotateY(720deg) rotateZ(1080deg); }
+}
+
+
+/* ── Chat markdown — see components/chat/markdown.tsx ───────────────────
+   Rhythm tuned for long agent replies (multi-paragraph, nested lists,
+   bold callouts). Tight pre-streaming defaults made walls of text;
+   these values let the bubble breathe. */
+.chat-md > *:first-child { margin-top: 0; }
+.chat-md > *:last-child { margin-bottom: 0; }
+.chat-md p { margin: 0.7em 0; }
+.chat-md p:first-child { margin-top: 0; }
+.chat-md p:last-child { margin-bottom: 0; }
+/* Headings start sections — generous top margin, tight bottom margin
+   so the heading hugs its content. :first-child kills the top margin
+   when a heading opens the bubble. */
+.chat-md h1 { font-size: 1.05em; font-weight: 600; margin: 1.2em 0 0.4em; }
+.chat-md h2 { font-size: 1em;    font-weight: 600; margin: 1em 0 0.35em; }
+.chat-md h3 { font-size: 0.95em; font-weight: 600; margin: 0.85em 0 0.3em; }
+.chat-md h4, .chat-md h5, .chat-md h6 { font-weight: 600; margin: 0.7em 0 0.25em; }
+.chat-md h1:first-child, .chat-md h2:first-child,
+.chat-md h3:first-child, .chat-md h4:first-child,
+.chat-md h5:first-child, .chat-md h6:first-child { margin-top: 0; }
+.chat-md ul, .chat-md ol { margin: 0.6em 0; padding-left: 1.4em; }
+.chat-md ul { list-style: disc; }
+.chat-md ol { list-style: decimal; }
+/* Top-level items earn breathing room — they're often multi-sentence
+   with nested children. */
+.chat-md li { margin: 0.4em 0; }
+.chat-md li > p { margin: 0; }
+/* Nested lists de-emphasize: lighter color + tighter rhythm. The
+   visual ladder lets the eye land on the top-level structure first. */
+.chat-md ul ul, .chat-md ol ol, .chat-md ul ol, .chat-md ol ul {
+  margin: 0.3em 0;
+  color: hsl(var(--muted-foreground));
+}
+.chat-md ul ul li, .chat-md ol ol li,
+.chat-md ul ol li, .chat-md ol ul li {
+  margin: 0.2em 0;
+}
+/* Bold inside markdown leans on weight 600, not 700 — so it sits
+   visibly between body and heading instead of competing with h2/h3. */
+.chat-md strong { font-weight: 600; }
+.chat-md a { color: hsl(var(--primary-foreground)); text-decoration: underline; text-underline-offset: 2px; }
+.chat-md:not(.chat-md-inverted) a { color: hsl(217 91% 50%); }
+.chat-md code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: 3px;
+  padding: 0.05em 0.35em;
+}
+.chat-md-inverted code {
+  background: hsl(var(--primary-foreground) / 0.12);
+  border-color: hsl(var(--primary-foreground) / 0.2);
+}
+.chat-md pre {
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  padding: 0.6em 0.75em;
+  overflow-x: auto;
+  margin: 0.5em 0;
+  font-size: 0.82em;
+  line-height: 1.5;
+}
+.chat-md pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+.chat-md blockquote {
+  border-left: 2px solid hsl(var(--border));
+  padding-left: 0.7em;
+  color: hsl(var(--muted-foreground));
+  margin: 0.4em 0;
+}
+.chat-md hr {
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  margin: 0.7em 0;
+}
+.chat-md table {
+  border-collapse: collapse;
+  margin: 0.5em 0;
+  font-size: 0.9em;
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.chat-md th, .chat-md td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.3em 0.55em;
+  text-align: left;
+  vertical-align: top;
+}
+.chat-md th {
+  background: hsl(var(--muted));
+  font-weight: 600;
+}
+.chat-md strong { font-weight: 600; }
+.chat-md em { font-style: italic; }

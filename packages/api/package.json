@@ -1,0 +1,54 @@
+{
+  "name": "@beevibe/api",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Beevibe API server — MCP tool surface for agents + REST endpoints for humans + MeshServer broker",
+  "license": "Apache-2.0",
+  "author": "Zhe Pang",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beevibe-ai/beevibe.git",
+    "directory": "packages/api"
+  },
+  "type": "module",
+  "main": "./dist/main.js",
+  "types": "./dist/main.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/main.d.ts",
+      "default": "./dist/main.js"
+    },
+    "./views/types": {
+      "types": "./dist/views/types.d.ts",
+      "default": "./dist/views/types.js"
+    }
+  },
+  "bin": {
+    "beevibe-api": "./dist/main.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "dev": "tsx watch src/main.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run --passWithNoTests",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@beevibe/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "express": "^5.2.1",
+    "ws": "^8.18.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.16.0",
+    "@types/pg": "^8.11.10",
+    "@types/supertest": "^6.0.2",
+    "@types/ws": "^8.18.1",
+    "pg": "^8.13.0",
+    "supertest": "^7.0.0"
+  }
+}

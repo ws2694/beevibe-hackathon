@@ -1,0 +1,121 @@
+{
+  "name": "@beevibe/core",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared library: domain, ports, services, adapters, auth",
+  "license": "Apache-2.0",
+  "author": "Zhe Pang",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beevibe-ai/beevibe.git",
+    "directory": "packages/core"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./domain": {
+      "types": "./dist/domain/index.d.ts",
+      "default": "./dist/domain/index.js"
+    },
+    "./adapters/postgres": {
+      "types": "./dist/adapters/postgres/index.d.ts",
+      "default": "./dist/adapters/postgres/index.js"
+    },
+    "./adapters/claude-code": {
+      "types": "./dist/adapters/claude-code/index.d.ts",
+      "default": "./dist/adapters/claude-code/index.js"
+    },
+    "./adapters/codex": {
+      "types": "./dist/adapters/codex/index.d.ts",
+      "default": "./dist/adapters/codex/index.js"
+    },
+    "./adapters/opencode": {
+      "types": "./dist/adapters/opencode/index.d.ts",
+      "default": "./dist/adapters/opencode/index.js"
+    },
+    "./adapters/hermes": {
+      "types": "./dist/adapters/hermes/index.d.ts",
+      "default": "./dist/adapters/hermes/index.js"
+    },
+    "./adapters/local-workspace": {
+      "types": "./dist/adapters/local-workspace/index.d.ts",
+      "default": "./dist/adapters/local-workspace/index.js"
+    },
+    "./adapters/openai": {
+      "types": "./dist/adapters/openai/index.d.ts",
+      "default": "./dist/adapters/openai/index.js"
+    },
+    "./adapters/anthropic": {
+      "types": "./dist/adapters/anthropic/index.d.ts",
+      "default": "./dist/adapters/anthropic/index.js"
+    },
+    "./adapters/runtime-registry": {
+      "types": "./dist/adapters/runtime-registry.d.ts",
+      "default": "./dist/adapters/runtime-registry.js"
+    },
+    "./services/agent-session": {
+      "types": "./dist/services/agent-session.d.ts",
+      "default": "./dist/services/agent-session.js"
+    },
+    "./services/memory": {
+      "types": "./dist/services/memory/index.d.ts",
+      "default": "./dist/services/memory/index.js"
+    },
+    "./services/task-service": {
+      "types": "./dist/services/task-service.d.ts",
+      "default": "./dist/services/task-service.js"
+    },
+    "./services/escalation-service": {
+      "types": "./dist/services/escalation-service.d.ts",
+      "default": "./dist/services/escalation-service.js"
+    },
+    "./services/dispatch-service": {
+      "types": "./dist/services/dispatch-service.d.ts",
+      "default": "./dist/services/dispatch-service.js"
+    },
+    "./services/orphan-reaper": {
+      "types": "./dist/services/orphan-reaper.d.ts",
+      "default": "./dist/services/orphan-reaper.js"
+    },
+    "./services/skills": {
+      "types": "./dist/services/skills/index.d.ts",
+      "default": "./dist/services/skills/index.js"
+    },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "default": "./dist/auth/index.js"
+    },
+    "./auth/constants": {
+      "types": "./dist/auth/constants.d.ts",
+      "default": "./dist/auth/constants.js"
+    },
+    "./test-helpers": {
+      "types": "./dist/test-helpers.d.ts",
+      "default": "./dist/test-helpers.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
+    "nanoid": "^5.0.7",
+    "openai": "^6.34.0",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.0",
+    "@types/pg": "^8.11.10",
+    "dotenv": "^17.4.2"
+  }
+}
