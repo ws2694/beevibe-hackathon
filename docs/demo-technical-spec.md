@@ -7,7 +7,7 @@ Maps each step of the hackathon demo script to concrete provider calls and data 
 ## Demo Flow Overview
 
 ```
-Step 0: Voice + vision     -> speech capture + current screen/browser context
+Step 0: Team input         -> voice, vision, Slack/chat, and current work context
 Step 1: Morning brief      -> Composio (read) + Tavily (web signals)
 Step 2: Delegation         -> Beevibe internal routing
 Step 3: Agent teamwork     -> Tavily (research) + Composio (read tools) + Nebius (parallel inference) + Hermes (browser)
@@ -18,18 +18,62 @@ Step 6: Org evolution      -> Beevibe creates or updates agent roles, rituals, a
 
 ---
 
-## Step 0 — Voice + Vision Control Plane
+## Team Friction Model
 
-**User story:** CEO can be anywhere, looking at anything, and speak a command
-that Beevibe grounds in the current work context.
+Beevibe is designed for teams using AI together, not a single person prompting a
+private assistant. The product problem is the friction that appears when AI work
+is fragmented:
 
-Example:
+- every person asks a different model with different context
+- AI outputs disappear into private chats
+- no one knows which agent owns the next step
+- IC agents are useful but humans do not want to route every subtask manually
+- approvals and tool actions need accountability
+- repeated workflows do not become team memory or operating process
 
-> "Beevibe, what am I looking at, who should handle this, and what changed overnight?"
+Beevibe's model is therefore:
 
-The voice layer is an input router, not a separate executor. It converts speech
-and screen context into the same Beevibe primitives the chat UI already uses:
-chat turns, tasks, approvals, agent updates, and org evolution events.
+```text
+Human team member
+  asks for an outcome in Slack, voice, web chat, or a browser context
+        |
+        v
+Team/org agent
+  interprets scope, checks memory, decides routing, owns the reply
+        |
+        v
+IC agent mesh
+  research / product / sales / finance / comms / engineering
+        |
+        v
+Team-visible output
+  recommendation / decision request / work product / audit trail
+```
+
+Humans should not need to say "ask Product Agent and Sales Agent." They should
+say what outcome they need. The team agent decides which IC agents to involve.
+
+---
+
+## Step 0 — Team Input Control Plane
+
+**User story:** any team member can be anywhere, looking at anything, and ask
+Beevibe for an outcome. Beevibe grounds the request in team context and routes
+it through the right team or org agent.
+
+Examples:
+
+> "Beevibe, this competitor launch looks serious. Figure out impact and
+> recommend a response."
+
+> "Beevibe, what changed overnight for the GTM team?"
+
+> "Beevibe, I am looking at this account. What is blocked and who owns it?"
+
+The input layer is a router, not a separate executor. It converts speech, chat
+messages, and screen context into the same Beevibe primitives the web app
+already uses: chat turns, rooms, tasks, approvals, agent updates, and org
+evolution events.
 
 ### MVP voice mode — browser speech + browser TTS
 
@@ -70,6 +114,56 @@ Current context:
 - Selected text: "New enterprise pricing tier..."
 - Visible summary: launch page, feature list, pricing claims
 ```
+
+### External chat mode — Slack and team tools
+
+Composio solves the external chat connector layer: inbound triggers, Slack
+thread context, account auth, and outbound replies. Beevibe still owns the team
+agent routing and negotiation model.
+
+```typescript
+type ExternalChatTurn = {
+  provider: 'slack' | 'teams' | 'gmail' | 'sms';
+  team_id?: string;
+  channel_id?: string;
+  thread_id?: string;
+  sender_person_id?: string;
+  text: string;
+  permalink?: string;
+  context_messages?: Array<{
+    author: string;
+    text: string;
+    ts: string;
+  }>;
+};
+```
+
+Slack demo flow:
+
+```text
+Slack thread
+  "@Beevibe this launch looks serious. Figure out impact and recommend a response."
+        |
+        v
+Composio Slack trigger
+  webhook event + thread context
+        |
+        v
+Beevibe conversation gateway
+  maps Slack thread -> Beevibe room or mission
+        |
+        v
+Team agent
+  routes to IC agents automatically
+        |
+        v
+Composio Slack action
+  posts team-agent synthesis back into the same thread
+```
+
+The Slack surface should show Beevibe as one team-facing bot. Individual IC
+agents can be visible in the content of updates, but humans should not need
+separate Slack identities for every agent.
 
 ### Realtime voice mode — upgrade path
 
@@ -118,13 +212,17 @@ Recommended MVP sources:
 
 ## Step 1 — Morning Brief: "What happened overnight?"
 
-**User story:** CEO asks from anywhere. Beevibe summarizes urgent messages, open decisions, agent progress, web signals, and calendar prep.
+**User story:** a manager or teammate asks from anywhere. Beevibe summarizes
+urgent messages, open decisions, agent progress, web signals, and calendar
+prep for the relevant person or team.
 
-The personal agent runs a parallel fan-out: one Composio call per work tool, one Tavily call for market signals, all in parallel.
+The team agent runs a parallel fan-out: one Composio call per work tool, one
+Tavily call for market signals, all in parallel.
 
 ### Composio — Read work context
 
-All of these run concurrently. `userId` = the CEO's Beevibe user ID.
+All of these run concurrently. `userId` maps to the connected account for the
+requesting human or team-owned service account.
 
 ```typescript
 const [emails, slackMentions, calendarToday, openDecisions] = await Promise.all([
@@ -159,7 +257,7 @@ const [emails, slackMentions, calendarToday, openDecisions] = await Promise.all(
     },
   }),
 
-  // Open decisions in Linear/Notion flagged for CEO review
+  // Open decisions in Linear/Notion flagged for team or manager review
   composio.tools.execute('LINEAR_LIST_ISSUES', {
     userId,
     arguments: {
@@ -190,9 +288,9 @@ const webSignals = await tvly.search(
 // webSignals.results[]  → cited articles with .url, .title, .publishedDate
 ```
 
-### Nebius — Personal agent LLM inference (optional path)
+### Nebius — Team agent LLM inference (optional path)
 
-If the personal agent session is assigned to the Nebius runtime (e.g., to save Claude quota on a lightweight summarization):
+If the team agent session is assigned to the Nebius runtime (e.g., to save Claude quota on a lightweight summarization):
 
 ```typescript
 const nebius = new OpenAI({
@@ -216,9 +314,11 @@ Model choice rationale: Llama-3.3-70B at ~$0.25/M tokens for a read-only synthes
 
 ## Step 2 — Delegation: "Prepare a response to the competitor launch."
 
-**User story:** Beevibe creates a mission and routes it to specialist agents.
+**User story:** Beevibe creates a mission and routes it to specialist IC agents
+without requiring the human to name each agent.
 
-This step is Beevibe-internal (task creation + routing). No provider calls at creation time, but the personal agent may log the mission to a tracked tool:
+This step is Beevibe-internal (task creation + routing). No provider calls at
+creation time, but the team agent may log the mission to a tracked tool:
 
 ```typescript
 // Optional: record the mission in Linear for audit trail
@@ -430,18 +530,20 @@ Nebius handles Finance + Research routing; Claude handles Product, Sales, Comms.
 
 ## Step 4 — Human Decision
 
-**User story:** Beevibe escalates: "Sales prefers A, Product prefers B. I recommend B. Approve?"
+**User story:** Beevibe escalates: "Sales prefers A, Product prefers B. I
+recommend B. Approve?"
 
-The personal agent synthesizes all specialist positions and sends a decision request to the CEO.
+The team agent synthesizes all specialist positions and sends a decision
+request to the accountable human.
 
-### Composio — Push decision to CEO
+### Composio — Push decision to accountable human
 
 ```typescript
-// DM the CEO on Slack with decision inbox link
+// DM the decision owner on Slack with decision inbox link
 await composio.tools.execute('SLACK_SENDS_A_MESSAGE', {
   userId,
   arguments: {
-    channel: ceosSlackUserId,      // DM
+    channel: decisionOwnerSlackUserId,      // DM
     text: [
       `*Competitor response — decision needed*`,
       `• Sales recommends Option A (aggressive pricing) — protects $${salesPosition.atRiskArr.toLocaleString()} ARR`,
@@ -458,13 +560,15 @@ await composio.tools.execute('SLACK_SENDS_A_MESSAGE', {
 
 ### Decision inbox (Beevibe-internal)
 
-The web UI shows the full tradeoff table with agent reasoning and cited sources. CEO approves inline (or by voice through the audio interface).
+The web UI shows the full tradeoff table with agent reasoning and cited
+sources. The accountable human approves inline, in Slack, or by voice.
 
 ---
 
 ## Step 5 — Real Action
 
-**User story:** CEO approves. Beevibe updates the team, drafts the customer message, and records the decision.
+**User story:** the accountable human approves. Beevibe updates the team,
+drafts the customer message, and records the decision.
 
 All four Composio writes run after approval is confirmed.
 
@@ -498,7 +602,7 @@ await Promise.all([
       page_id: missionPageId,
       properties: {
         Status: { select: { name: 'Decision Recorded' } },
-        Decision: { rich_text: [{ text: { content: 'Option B approved by CEO' } }] },
+        Decision: { rich_text: [{ text: { content: 'Option B approved by decision owner' } }] },
         'Decided At': { date: { start: new Date().toISOString() } },
       },
     },
@@ -521,7 +625,7 @@ await Promise.all([
 ## Step 6 — Org Evolution: "Make that permanent."
 
 **User story:** the company OS notices repeated work and proposes a durable org
-change. The CEO can approve it by voice.
+change. The team lead or decision owner can approve it by voice or Slack.
 
 Example:
 
@@ -582,7 +686,7 @@ const evolution: OrgEvolutionEvent = {
 The demo should make the org evolution visible:
 
 - new agent appears in the org map
-- parent/reporting line is drawn under GTM or CEO
+- parent/reporting line is drawn under GTM, Product, or the relevant team agent
 - tool badges appear: Tavily, Slack, HubSpot, Notion
 - ritual appears: weekly competitor scan
 - memory card appears: seeded from competitor response mission
@@ -597,7 +701,7 @@ they teach the company how to operate next time.
 
 | Step | Composio | Tavily | Nebius | Hermes |
 |---|---|---|---|---|
-| 0. Voice + vision | Optional Composio context reads | — | Small intent router / realtime synthesis | Browser context fallback |
+| 0. Team input | Slack/chat context reads + optional account context | — | Small intent router / realtime synthesis | Browser context fallback |
 | 1. Morning brief | `GMAIL_FETCH_EMAILS`, `SLACK_LIST_MESSAGES`, `GOOGLECALENDAR_LIST_EVENTS`, `LINEAR_LIST_ISSUES` | `search()` — news, 1 day, basic | Llama-3.3-70B for brief synthesis | — |
 | 2. Delegation | `LINEAR_CREATE_ISSUE` | — | — | — |
 | 3. Agent teamwork | `NOTION_QUERY_DATABASE`, `LINEAR_LIST_ISSUES`, `HUBSPOT_LIST_DEALS`, `HUBSPOT_LIST_CONTACTS` | `search()` × 2 advanced, `extract()` × 1 | Qwen2.5-72B for finance analysis | `hermes -z` for JS-rendered competitor pages |
@@ -615,13 +719,14 @@ they teach the company how to operate next time.
 | Tavily | 2× advanced search (4 credits) + 1× advanced extract (2 credits) = 6 credits | ~$0.05 at PAYG |
 | Nebius | ~15K tokens total (Finance + Research + brief) | ~$0.005 |
 | Hermes | 1× browser session, ~10 turns | Browser Use credits |
-| Claude (Anthropic) | Product, Sales, Comms agents + personal agent | Separate billing |
+| Claude (Anthropic) | Product, Sales, Comms agents + team agent | Separate billing |
 
 ---
 
 ## Composio Toolkit Connection Checklist
 
-Before the demo, connect the CEO user account to each toolkit via `composio.connectedAccounts.link()`:
+Before the demo, connect the relevant human or team-owned account to each
+toolkit via `composio.connectedAccounts.link()`:
 
 - [ ] `gmail` — OAuth2, read + compose + send scopes
 - [ ] `slack` — OAuth2, `channels:read`, `chat:write`, `im:write`, `im:history`
