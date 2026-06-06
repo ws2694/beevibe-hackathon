@@ -7,12 +7,112 @@ Maps each step of the hackathon demo script to concrete provider calls and data 
 ## Demo Flow Overview
 
 ```
-Step 1: Morning brief      → Composio (read) + Tavily (web signals)
-Step 2: Delegation         → Beevibe internal routing
-Step 3: Agent teamwork     → Tavily (research) + Composio (read tools) + Nebius (parallel inference) + Hermes (browser)
-Step 4: Human decision     → Composio (Slack notify) + Nebius (synthesis)
-Step 5: Real action        → Composio (write tools)
+Step 0: Voice + vision     -> speech capture + current screen/browser context
+Step 1: Morning brief      -> Composio (read) + Tavily (web signals)
+Step 2: Delegation         -> Beevibe internal routing
+Step 3: Agent teamwork     -> Tavily (research) + Composio (read tools) + Nebius (parallel inference) + Hermes (browser)
+Step 4: Human decision     -> Composio (Slack notify) + Nebius (synthesis)
+Step 5: Real action        -> Composio (write tools)
+Step 6: Org evolution      -> Beevibe creates or updates agent roles, rituals, and playbooks
 ```
+
+---
+
+## Step 0 — Voice + Vision Control Plane
+
+**User story:** CEO can be anywhere, looking at anything, and speak a command
+that Beevibe grounds in the current work context.
+
+Example:
+
+> "Beevibe, what am I looking at, who should handle this, and what changed overnight?"
+
+The voice layer is an input router, not a separate executor. It converts speech
+and screen context into the same Beevibe primitives the chat UI already uses:
+chat turns, tasks, approvals, agent updates, and org evolution events.
+
+### MVP voice mode — browser speech + browser TTS
+
+Reuse the lightweight approach from the interview-prep project:
+
+- `SpeechRecognition` captures interim and final transcript text.
+- `MediaRecorder` can capture an optional audio blob for debugging or future
+  audio-capable models.
+- A small silence detector ends the turn after the user pauses.
+- Browser `speechSynthesis` speaks the short Beevibe reply.
+- Raw audio is optional; transcript-first keeps the flow compatible with small
+  hosted or local models.
+
+```typescript
+type VoiceTurn = {
+  transcript: string;
+  source: 'web' | 'mobile' | 'slack' | 'meeting';
+  started_at: string;
+  ended_at: string;
+  delivery?: {
+    duration_sec: number;
+    word_count: number;
+    long_pauses: number;
+  };
+};
+```
+
+For the first hackathon build, the client can send the transcript to existing
+`POST /chat` with a compact prefix:
+
+```text
+[voice source=web]
+User said: "Prepare a response team for this competitor launch."
+
+Current context:
+- URL: https://competitor.example/launch
+- Title: Competitor launches AI workflow suite
+- Selected text: "New enterprise pricing tier..."
+- Visible summary: launch page, feature list, pricing claims
+```
+
+### Realtime voice mode — upgrade path
+
+For a more natural demo, use a realtime speech model over WebRTC. The realtime
+model should still emit structured text events back into the Beevibe router so
+the company OS remains deterministic:
+
+```typescript
+type VoiceIntent =
+  | { kind: 'brief_me'; scope: 'overnight' | 'today' | 'mission' }
+  | { kind: 'delegate_mission'; mission: string }
+  | { kind: 'approve_action'; target_id?: string; note?: string }
+  | { kind: 'ask_agent_status'; agent_name?: string; mission_id?: string }
+  | { kind: 'create_agent'; name: string; reason: string }
+  | { kind: 'pause_voice' };
+```
+
+### Vision context
+
+Vision means "ground the spoken command in what the user is seeing." Start with
+text context because it is safer and easier to demo; screenshots can be opt-in.
+
+```typescript
+type ContextEvent = {
+  kind: 'screen' | 'browser' | 'doc' | 'meeting' | 'tool';
+  source: 'web_app' | 'browser_extension' | 'composio' | 'hermes';
+  title?: string;
+  url?: string;
+  selected_text?: string;
+  visible_text_summary?: string;
+  screenshot_ref?: string;
+  evidence?: Array<{ label: string; url?: string; text?: string }>;
+};
+```
+
+Recommended MVP sources:
+
+| Source | How to capture | Demo use |
+|---|---|---|
+| Beevibe web app | active route, selected entity, current task/session | "What is blocked here?" |
+| Browser extension | URL, title, selected text, visible text | "What am I looking at?" |
+| Composio | Slack/Gmail/Calendar/CRM state | "What needs me?" |
+| Hermes | deeper browser inspection when text is insufficient | "Inspect this page and compare it to our roadmap." |
 
 ---
 
@@ -418,15 +518,92 @@ await Promise.all([
 
 ---
 
+## Step 6 — Org Evolution: "Make that permanent."
+
+**User story:** the company OS notices repeated work and proposes a durable org
+change. The CEO can approve it by voice.
+
+Example:
+
+> "Make competitive intelligence permanent."
+
+Beevibe creates a new agent role instead of treating this as a one-off task.
+
+```typescript
+type OrgEvolutionEvent = {
+  action:
+    | 'create_agent'
+    | 'specialize_agent'
+    | 'promote_agent'
+    | 'add_ritual'
+    | 'update_playbook'
+    | 'reorg_agent';
+  reason: string;
+  requested_by: 'human' | 'agent';
+  source_session_id: string;
+  proposed_change: Record<string, unknown>;
+  requires_approval: boolean;
+};
+```
+
+### Create Competitive Intelligence Agent
+
+```typescript
+const evolution: OrgEvolutionEvent = {
+  action: 'create_agent',
+  reason: 'Competitor launches require repeated cross-functional response work.',
+  requested_by: 'human',
+  source_session_id: missionSessionId,
+  requires_approval: true,
+  proposed_change: {
+    name: 'Competitive Intelligence Agent',
+    parent_agent: 'GTM Team Agent',
+    charter:
+      'Monitor competitor launches, pricing changes, customer reactions, and analyst coverage.',
+    tools: ['tavily', 'slack', 'hubspot', 'notion'],
+    rituals: [
+      {
+        cadence: 'weekly',
+        prompt: 'Scan competitor and market signals every Monday morning.',
+      },
+    ],
+    escalation_rule:
+      'Escalate when competitor activity touches active pipeline above $100K ARR.',
+    seeded_memory: {
+      from_session_id: missionSessionId,
+      include: ['launch summary', 'agent disagreement', 'approved response'],
+    },
+  },
+};
+```
+
+### UI proof
+
+The demo should make the org evolution visible:
+
+- new agent appears in the org map
+- parent/reporting line is drawn under GTM or CEO
+- tool badges appear: Tavily, Slack, HubSpot, Notion
+- ritual appears: weekly competitor scan
+- memory card appears: seeded from competitor response mission
+- timeline entry appears: "Company OS evolved"
+
+This is the core hackathon differentiation: agents do not just complete work;
+they teach the company how to operate next time.
+
+---
+
 ## Provider Call Summary by Demo Step
 
 | Step | Composio | Tavily | Nebius | Hermes |
 |---|---|---|---|---|
+| 0. Voice + vision | Optional Composio context reads | — | Small intent router / realtime synthesis | Browser context fallback |
 | 1. Morning brief | `GMAIL_FETCH_EMAILS`, `SLACK_LIST_MESSAGES`, `GOOGLECALENDAR_LIST_EVENTS`, `LINEAR_LIST_ISSUES` | `search()` — news, 1 day, basic | Llama-3.3-70B for brief synthesis | — |
 | 2. Delegation | `LINEAR_CREATE_ISSUE` | — | — | — |
 | 3. Agent teamwork | `NOTION_QUERY_DATABASE`, `LINEAR_LIST_ISSUES`, `HUBSPOT_LIST_DEALS`, `HUBSPOT_LIST_CONTACTS` | `search()` × 2 advanced, `extract()` × 1 | Qwen2.5-72B for finance analysis | `hermes -z` for JS-rendered competitor pages |
 | 4. Human decision | `SLACK_SENDS_A_MESSAGE` | — | Llama-3.3-70B for tradeoff synthesis | — |
 | 5. Real action | `SLACK_SENDS_A_MESSAGE`, `GMAIL_CREATE_DRAFT`, `NOTION_UPDATE_PAGE`, `LINEAR_UPDATE_ISSUE` | — | — | — |
+| 6. Org evolution | Optional Slack/Notion announcement | Future recurring scans | Agent-role synthesis | Optional browser research ritual |
 
 ---
 

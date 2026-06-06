@@ -44,18 +44,61 @@ Beevibe turns that into agent teamwork:
 Beevibe Everywhere is not a chatbot bolted onto a dashboard. It is an agent
 operating layer for a company.
 
+- **Audio-first presence:** the demo is controlled by voice. The user can ask
+  for a brief, delegate a mission, interrupt agents, approve actions, or create
+  a new role without typing.
+- **Vision-aware context:** Beevibe can ground a voice command in what the user
+  is looking at: a browser tab, dashboard, document, customer account, inbox
+  thread, or meeting note.
 - **Everywhere interface:** talk to your agents from web, Slack, SMS, voice, or
   wherever the hackathon demo routes messages.
 - **Personal agent:** one agent knows your role, priorities, preferences, and
   decision style.
 - **Specialist team mesh:** agents can ask peers for help, negotiate conflicts,
   create tasks, update work products, and escalate blockers.
+- **Evolving organization:** repeated missions can create new agent roles,
+  promote authority, add rituals, update playbooks, or reorganize reporting
+  lines. The company OS learns how the company should operate next time.
 - **Shared memory:** agents remember durable facts about the company, project,
   and people instead of relearning everything each session.
 - **Decision inbox:** humans do not review every tool call. They review the
   few decisions that actually need judgment.
 - **Runtime flexibility:** local or cloud runtimes can claim work, so the same
   company brain can run through different agent harnesses.
+
+## Audio, Vision, and Org Evolution
+
+The hackathon demo should feel less like "chat with an agent" and more like
+"talk to the company."
+
+```text
+User voice
+  "Beevibe, what am I looking at and who should handle this?"
+        |
+        v
+Audio command layer
+  transcript / intent / interruption / approval
+        |
+        v
+Vision context layer
+  active page / selected text / screenshot summary / tool state
+        |
+        v
+Company OS
+  personal agent / specialist team mesh / tasks / memory / tools
+        |
+        v
+Org evolution
+  create agent / specialize role / add ritual / update playbook
+```
+
+The signature moment is voice-driven evolution:
+
+> "Make competitive intelligence permanent."
+
+Beevibe creates a Competitive Intelligence Agent, gives it approved tools,
+assigns it under the GTM Team Agent, seeds it with memory from the mission, and
+adds a weekly competitor-scan ritual.
 
 ## Sponsor Integration Story
 
@@ -74,7 +117,17 @@ agent-to-agent negotiation, human escalation, and audit trail.
 
 ## Demo Script
 
-1. **Morning brief**
+1. **Voice and vision wake-up**
+
+   CEO is looking at a competitor launch page, sales dashboard, or urgent
+   Slack thread and says:
+
+   > "Beevibe, what am I looking at and what needs me?"
+
+   Beevibe captures the spoken command, attaches screen/browser context, and
+   routes it through the personal agent.
+
+2. **Morning brief**
 
    CEO asks from anywhere:
 
@@ -83,7 +136,7 @@ agent-to-agent negotiation, human escalation, and audit trail.
    Beevibe summarizes urgent messages, open decisions, agent progress, web
    signals, and calendar prep.
 
-2. **Delegation**
+3. **Delegation**
 
    CEO says:
 
@@ -91,22 +144,31 @@ agent-to-agent negotiation, human escalation, and audit trail.
 
    Beevibe creates a mission and routes it to specialist agents.
 
-3. **Agent teamwork**
+4. **Agent teamwork**
 
    The live mesh shows agents researching, asking each other questions,
    disagreeing, and converging on options.
 
-4. **Human decision**
+5. **Human decision**
 
    Beevibe escalates:
 
    > "Sales prefers option A, Product prefers option B. I recommend B because
    > it preserves enterprise pricing. Approve?"
 
-5. **Real action**
+6. **Real action**
 
    CEO approves by chat or voice. Beevibe updates the team, drafts the customer
    message, and records the decision.
+
+7. **Org evolution**
+
+   CEO says:
+
+   > "Make that competitive intelligence function permanent."
+
+   Beevibe creates the new agent role, updates the org map, and stores the
+   mission as a reusable company playbook.
 
 ## Architecture
 
