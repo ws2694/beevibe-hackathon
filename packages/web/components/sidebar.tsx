@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Bot,
-  GraduationCap,
   ListChecks,
   type LucideIcon,
   MessageSquare,
@@ -47,7 +46,6 @@ const PRIMARY_MODES: NavItem[] = [
   { href: "/", label: "Chat", icon: MessageSquare, isActive: matchesChat },
   { href: "/rooms", label: "Rooms", icon: Users, isActive: (p) => p.startsWith("/rooms") },
   { href: "/tasks", label: "Tasks", icon: ListChecks, isActive: (p) => p.startsWith("/tasks") },
-  { href: "/teacher", label: "Teach", icon: GraduationCap, isActive: (p) => p.startsWith("/teacher") },
 ];
 
 export function Sidebar() {
