@@ -342,6 +342,37 @@ export interface ChatConversationsResponse {
   conversations: ChatConversationSummary[];
 }
 
+export type TeacherLanguage = "zh-CN" | "zh-TW" | "en";
+export type TeacherCharacterMode = "simplified" | "traditional";
+
+export interface TeacherSessionInput {
+  language?: TeacherLanguage;
+  character_mode?: TeacherCharacterMode;
+  pinyin_enabled?: boolean;
+  page_context?: {
+    url?: string;
+    title?: string;
+    selection?: string;
+    visible_text?: string;
+    focused_element?: string;
+    scroll_percent?: number;
+  };
+}
+
+export interface TeacherSessionResponse {
+  ok: true;
+  session_id: string;
+  language: TeacherLanguage;
+  character_mode: TeacherCharacterMode;
+  pinyin_enabled: boolean;
+  system_prompt: string;
+  realtime?: {
+    client_secret: { value: string; expires_at: number };
+    model: string;
+    voice: string;
+  };
+}
+
 export type EscalationResolveInput =
   | {
       source: "initiator" | "counterparty";
@@ -634,6 +665,13 @@ export const api = {
       ),
     health: (opts: ReadOptions = {}) =>
       fetchJson<HealthResponse>("/health/runtime", { signal: opts.signal }),
+  },
+  teacher: {
+    createSession: (input: TeacherSessionInput = {}) =>
+      fetchJson<TeacherSessionResponse>("/teacher/session", {
+        method: "POST",
+        body: input,
+      }),
   },
   escalations: {
     resolve: (id: string, input: EscalationResolveInput) =>

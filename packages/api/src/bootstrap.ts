@@ -49,6 +49,7 @@ import { createSigninRouter } from "./routes/signin.js";
 import { createNewsletterRouter } from "./routes/newsletter.js";
 import { createMeRouter } from "./routes/me.js";
 import { createRoomRouter } from "./routes/room.js";
+import { createTeacherRouter } from "./routes/teacher.js";
 import { createStreamAuthMiddleware, streamTokenAdapter } from "./auth/middleware.js";
 import { ChatResolver } from "./runtime/chat-resolver.js";
 import { DaemonHub } from "./runtime/hub.js";
@@ -450,6 +451,13 @@ export async function bootstrap(cfg: BootstrapConfig): Promise<BootstrapResult> 
     makeMemoryAgent,
   });
   server.getApp().use("/room", roomRouter);
+
+  // Teacher browser sessions — Mandarin + language-configurable audio tutor.
+  const teacherRouter = createTeacherRouter({
+    authMiddleware: server.getAuthMiddleware(),
+    openaiApiKey: cfg.openaiApiKey,
+  });
+  server.getApp().use("/teacher", teacherRouter);
 
   // Phase 5 daemon-orphan reaper. Marks daemon-bound running sessions
   // failed when both the session's last_event_at AND the runtime's
