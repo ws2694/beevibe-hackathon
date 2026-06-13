@@ -85,7 +85,11 @@ export class LocalWorkspaceManager implements WorkspaceManager {
       );
     }
     const configPath = join(path, "mcp-config.json");
-    const expected = buildMcpConfig(agent.api_key, this.config.mcpServerUrl);
+    const expected = buildMcpConfig(
+      agent.api_key,
+      this.config.mcpServerUrl,
+      readExtraMcpServersFromEnv(),
+    );
     // Auto-refresh on drift: previously this was guarded by a bare
     // `existsSync` and a stale URL or rotated bv_a_ would persist until
     // the operator manually rm'd the file (documented but undiscoverable).
@@ -138,6 +142,23 @@ export class LocalWorkspaceManager implements WorkspaceManager {
 }
 
 /**
+ * Optional third-party MCP servers to bundle into every workspace's
+ * mcp-config.json. Populated by the composition root from env (see
+ * `readExtraMcpServersFromEnv`) and threaded through into `buildMcpConfig`.
+ *
+ * Hackathon scope:
+ *  - `composio` exposes the project's Slackbot/Gmail/Calendar/etc. toolkits
+ *    via Composio's Tool Router meta-MCP at `connect.composio.dev/mcp`.
+ *  - `tavily` exposes search/extract/crawl/map/research as MCP tools.
+ *
+ * Each is opt-in — omit the key to skip the entry entirely.
+ */
+export interface ExtraMcpServers {
+  composio?: { url: string; consumerKey: string };
+  tavily?: { apiKey: string };
+}
+
+/**
  * The mcp-config.json the spawner writes into each agent's workspace.
  * Exported so the daemon (`@beevibe/daemon`) can produce byte-identical
  * configs — the MCP server's parser sees one shape regardless of which
@@ -146,24 +167,73 @@ export class LocalWorkspaceManager implements WorkspaceManager {
  * `${BEEVIBE_SESSION_ID}` is a literal placeholder; the Claude CLI
  * interpolates from process env at config parse time, and the spawner
  * sets BEEVIBE_SESSION_ID on the subprocess env.
+ *
+ * `extras` adds opt-in MCP servers (Composio, Tavily, …) alongside the
+ * always-present `beevibe` entry. Defaults to an empty bundle so existing
+ * callers stay byte-for-byte compatible.
  */
-export function buildMcpConfig(apiKey: string, mcpServerUrl: string): string {
-  return (
-    JSON.stringify(
-      {
-        mcpServers: {
-          beevibe: {
-            type: "http",
-            url: mcpServerUrl,
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              "X-Beevibe-Session": "${BEEVIBE_SESSION_ID}",
-            },
-          },
-        },
+export function buildMcpConfig(
+  apiKey: string,
+  mcpServerUrl: string,
+  extras: ExtraMcpServers = {},
+): string {
+  const mcpServers: Record<string, unknown> = {
+    beevibe: {
+      type: "http",
+      url: mcpServerUrl,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "X-Beevibe-Session": "${BEEVIBE_SESSION_ID}",
       },
-      null,
-      2,
-    ) + "\n"
-  );
+    },
+  };
+
+  if (extras.composio) {
+    // Composio's auth header is `x-consumer-api-key`, NOT
+    // `Authorization: Bearer` and NOT `x-api-key`. Confirmed via live
+    // probe of connect.composio.dev/mcp 2026-06-11.
+    mcpServers.composio = {
+      type: "http",
+      url: extras.composio.url,
+      headers: { "x-consumer-api-key": extras.composio.consumerKey },
+    };
+  }
+
+  if (extras.tavily) {
+    // Tavily's hosted MCP takes the API key as a query param. The endpoint
+    // is fixed; no consumer-key/header model.
+    mcpServers.tavily = {
+      type: "http",
+      url: `https://mcp.tavily.com/mcp/?tavilyApiKey=${extras.tavily.apiKey}`,
+    };
+  }
+
+  return JSON.stringify({ mcpServers }, null, 2) + "\n";
+}
+
+/**
+ * Resolve `ExtraMcpServers` from environment variables. Composio requires
+ * BOTH `COMPOSIO_MCP_URL` and `COMPOSIO_MCP_CONSUMER_KEY` to be present
+ * (partial config is treated as unset — safer than partially-broken auth).
+ * Tavily requires only `TAVILY_API_KEY`.
+ *
+ * Defaults to `process.env`; pass an explicit `env` for tests.
+ */
+export function readExtraMcpServersFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): ExtraMcpServers {
+  const extras: ExtraMcpServers = {};
+
+  const composioUrl = env.COMPOSIO_MCP_URL?.trim();
+  const composioKey = env.COMPOSIO_MCP_CONSUMER_KEY?.trim();
+  if (composioUrl && composioKey) {
+    extras.composio = { url: composioUrl, consumerKey: composioKey };
+  }
+
+  const tavilyKey = env.TAVILY_API_KEY?.trim();
+  if (tavilyKey) {
+    extras.tavily = { apiKey: tavilyKey };
+  }
+
+  return extras;
 }

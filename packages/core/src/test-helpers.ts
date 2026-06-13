@@ -26,7 +26,9 @@ const ALL_TABLES = [
   "task",
   "runtime",
   "daemon",
+  "slack_conversation_session",
   "agent",
+  "slack_person_link",
   "person",
 ];
 

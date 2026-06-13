@@ -11,8 +11,12 @@ export type {
   NegotiationRow,
   NegotiationRoundRow,
   EscalationRow,
+  SlackPersonLinkRow,
+  SlackConversationSessionRow,
 } from "./row-types.js";
 export { PostgresPersonRepository } from "./person-repo.js";
+export { PostgresSlackPersonLinkRepository } from "./slack-person-link-repo.js";
+export { PostgresSlackConversationSessionRepository } from "./slack-conversation-session-repo.js";
 export { PostgresAgentRepository } from "./agent-repo.js";
 export { PostgresCoreMemoryRepository } from "./core-memory-repo.js";
 export { PostgresTaskRepository } from "./task-repo.js";

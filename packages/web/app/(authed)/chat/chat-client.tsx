@@ -222,6 +222,7 @@ const RUNTIME_DISPLAY_NAME: Record<KnownCli, string> = {
   codex: "Codex",
   hermes: "Hermes",
   opencode: "OpenCode",
+  openclaw: "OpenClaw",
 };
 
 function RuntimeMismatchBanner({

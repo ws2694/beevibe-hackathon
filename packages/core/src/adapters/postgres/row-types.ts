@@ -12,6 +12,22 @@ export interface PersonRow {
   updated_at: Date;
 }
 
+export interface SlackPersonLinkRow {
+  workspace_id: string;
+  slack_user_id: string;
+  person_id: string;
+  created_at: Date;
+}
+
+export interface SlackConversationSessionRow {
+  workspace_id: string;
+  channel: string;
+  thread_bucket: string;
+  prior_session_id: string;
+  last_used_at: Date;
+  created_at: Date;
+}
+
 export interface AgentRow {
   id: string;
   name: string;
