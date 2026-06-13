@@ -1,0 +1,13 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 2ddbae8f89738b30f4807bbcb20ca13ddb160f22..1f1a2d5a88de9543e331f947c1740d7e36586154 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -3915,7 +3915,7 @@ var PusherService = class {
+ 			this.pusherChannel = `private-${this.clientId}_triggers`;
+ 			logger_default.debug(`[PusherService] Creating Pusher client for client ID: ${this.clientId} in cluster ${this.pusherCluster}`);
+ 			try {
+-				const { default: Pusher } = await import("pusher-js");
++				const { default: { Pusher } } = await import("pusher-js"); /* beevibe-hackathon: composio destructures the wrapper, not the constructor */
+ 				this.pusherClient = new Pusher(this.pusherKey, {
+ 					cluster: this.pusherCluster,
+ 					channelAuthorization: {

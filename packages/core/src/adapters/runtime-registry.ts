@@ -2,6 +2,7 @@ import type { RuntimeRegistry } from "../ports/runtime.js";
 import { ClaudeCodeRuntime } from "./claude-code/runtime.js";
 import { CodexRuntime } from "./codex/runtime.js";
 import { HermesRuntime } from "./hermes/runtime.js";
+import { OpenClawRuntime } from "./openclaw/runtime.js";
 import { OpenCodeRuntime } from "./opencode/runtime.js";
 
 /**
@@ -24,6 +25,7 @@ export function createDefaultRuntimeRegistry(): RuntimeRegistry {
     codex: new CodexRuntime({}),
     opencode: new OpenCodeRuntime({}),
     hermes: new HermesRuntime({}),
+    openclaw: new OpenClawRuntime({}),
   };
 }
 

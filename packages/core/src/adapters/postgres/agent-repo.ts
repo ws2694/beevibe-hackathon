@@ -32,12 +32,23 @@ export class PostgresAgentRepository implements AgentRepository {
   }
 
   async findTopLevelForOwner(ownerId: string): Promise<Agent | undefined> {
-    // team before org — alphabetical DESC picks 'team' over 'org'
+    // Strict org-chart order: org > team > ic. Returns the highest-level
+    // agent the person owns. Aligns with "highest level agent to talk
+    // to" — when a person has both an org-tier captain AND team leads
+    // (e.g. the counter-launch demo topology: ceo → eng-lead +
+    // marketing-lead), the org-tier captain is the natural Slack-routing
+    // default, not one of its team reports. IC is included for
+    // completeness even though it'll only return when the person has no
+    // team or org agent.
     const { rows } = await this.pool.query<AgentRow>(
       `SELECT * FROM agent
         WHERE owner_id = $1
-          AND hierarchy_level IN ('team', 'org')
-        ORDER BY hierarchy_level DESC
+          AND hierarchy_level IN ('team', 'org', 'ic')
+        ORDER BY CASE hierarchy_level
+                   WHEN 'org'  THEN 1
+                   WHEN 'team' THEN 2
+                   WHEN 'ic'   THEN 3
+                 END
         LIMIT 1`,
       [ownerId],
     );

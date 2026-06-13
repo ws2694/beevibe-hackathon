@@ -64,23 +64,28 @@ describe("PostgresAgentRepository", () => {
     await expect(agents.create(newAgent({ api_key: "bv_dup" }))).rejects.toThrow();
   });
 
-  it("findTopLevelForOwner returns team agent over org", async () => {
+  it("findTopLevelForOwner returns org agent over team (true hierarchy order)", async () => {
     await agents.create(newAgent({ hierarchy_level: "ic" }));
-    await agents.create(newAgent({ hierarchy_level: "org", name: "org-a" }));
-    const team = await agents.create(newAgent({ hierarchy_level: "team", name: "team-a" }));
-    const top = await agents.findTopLevelForOwner(ownerId);
-    expect(top?.id).toBe(team.id);
-  });
-
-  it("findTopLevelForOwner falls back to org when no team exists", async () => {
-    await agents.create(newAgent({ hierarchy_level: "ic" }));
-    const org = await agents.create(newAgent({ hierarchy_level: "org" }));
+    await agents.create(newAgent({ hierarchy_level: "team", name: "team-a" }));
+    const org = await agents.create(newAgent({ hierarchy_level: "org", name: "org-a" }));
     const top = await agents.findTopLevelForOwner(ownerId);
     expect(top?.id).toBe(org.id);
   });
 
-  it("findTopLevelForOwner returns undefined when only IC exists", async () => {
+  it("findTopLevelForOwner falls back to team when no org exists", async () => {
     await agents.create(newAgent({ hierarchy_level: "ic" }));
+    const team = await agents.create(newAgent({ hierarchy_level: "team" }));
+    const top = await agents.findTopLevelForOwner(ownerId);
+    expect(top?.id).toBe(team.id);
+  });
+
+  it("findTopLevelForOwner falls back to IC when neither team nor org exists", async () => {
+    const ic = await agents.create(newAgent({ hierarchy_level: "ic" }));
+    const top = await agents.findTopLevelForOwner(ownerId);
+    expect(top?.id).toBe(ic.id);
+  });
+
+  it("findTopLevelForOwner returns undefined when the owner has no agents at all", async () => {
     expect(await agents.findTopLevelForOwner(ownerId)).toBeUndefined();
   });
 

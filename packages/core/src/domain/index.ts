@@ -4,6 +4,8 @@ export * from "./task.js";
 export * from "./session.js";
 export * from "./core-memory.js";
 export * from "./person.js";
+export * from "./slack-person-link.js";
+export * from "./slack-conversation-session.js";
 export * from "./work-product.js";
 export * from "./memory.js";
 export * from "./negotiation.js";

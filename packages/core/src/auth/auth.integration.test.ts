@@ -114,10 +114,12 @@ describe("auth — integration", () => {
     });
   });
 
-  it("findUserAgent prefers team over org for the same owner", async () => {
+  it("findUserAgent prefers org over team for the same owner (true hierarchy)", async () => {
+    // Counter-launch demo topology (org-tier CEO → team leads) needs the
+    // CEO to be the human-routing default, not one of its team reports.
     const alice = await makeAlice();
-    const team = await makeTeamAgentFor(alice.person.id);
-    await provisionAgent(
+    await makeTeamAgentFor(alice.person.id);
+    const { agent: orgAgent } = await provisionAgent(
       { agentRepo, coreMemoryRepo },
       {
         id: agentId(),
@@ -129,12 +131,12 @@ describe("auth — integration", () => {
     );
 
     const primary = await findUserAgent(agentRepo, alice.person.id);
-    expect(primary?.agentId).toBe(team.agent.id);
-    expect(primary?.hierarchyLevel).toBe("team");
+    expect(primary?.agentId).toBe(orgAgent.id);
+    expect(primary?.hierarchyLevel).toBe("org");
 
-    // And the human-key lookup should still route to the team agent too.
+    // And the human-key lookup should route to the org agent too.
     const human = await lookupApiKey(deps, alice.apiKey);
-    expect(human?.source === "human" && human.agentId).toBe(team.agent.id);
+    expect(human?.source === "human" && human.agentId).toBe(orgAgent.id);
   });
 
   it("findUserAgent falls back to org when no team agent exists", async () => {

@@ -30,6 +30,12 @@ describe("createDefaultRuntimeRegistry", () => {
     expect(registry["hermes"]!.type).toBe("hermes");
   });
 
+  it("registers openclaw", () => {
+    const registry = createDefaultRuntimeRegistry();
+    expect(registry["openclaw"]).toBeDefined();
+    expect(registry["openclaw"]!.type).toBe("openclaw");
+  });
+
   it("every registry value's .type matches its registry key (sanity check against typos)", () => {
     const registry = createDefaultRuntimeRegistry();
     for (const [key, runtime] of Object.entries(registry)) {

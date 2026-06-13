@@ -13,6 +13,8 @@ import {
   PostgresRuntimeRepository,
   PostgresSessionEventRepository,
   PostgresSessionRepository,
+  PostgresSlackConversationSessionRepository,
+  PostgresSlackPersonLinkRepository,
   PostgresTaskRepository,
   PostgresWorkProductRepository,
   createPool,
@@ -57,6 +59,10 @@ import { RuntimeWsServer } from "./runtime/ws-server.js";
 import { SseManager } from "./sse/manager.js";
 import { SseListener } from "./sse/listener.js";
 import { OwnerLookup } from "./sse/owner-lookup.js";
+import {
+  startComposioSubscriber,
+  type ComposioSubscriberHandle,
+} from "./composio/subscriber.js";
 
 export interface BootstrapConfig {
   databaseUrl: string;
@@ -131,6 +137,13 @@ export async function bootstrap(cfg: BootstrapConfig): Promise<BootstrapResult> 
   const escalationRepo = new PostgresEscalationRepository(pool);
   const roomRepo = new PostgresRoomRepository(pool);
   const agentProvisionEventRepo = new PostgresAgentProvisionEventRepository(pool);
+  // M2.5 — Slack identity → beevibe person cache used by the Composio
+  // SDK subscriber to route inbound DMs/@mentions to the right agent.
+  const slackPersonLinkRepo = new PostgresSlackPersonLinkRepository(pool);
+  // M2.6 — Slack conversation → prior beevibe session cache, for resume
+  // continuity across DM turns and channel-thread replies.
+  const slackConversationSessionRepo =
+    new PostgresSlackConversationSessionRepository(pool);
 
   // External services (LLM + embeddings) for memory pipeline
   const embed = new OpenAIEmbeddingService({ apiKey: cfg.openaiApiKey });
@@ -514,11 +527,63 @@ export async function bootstrap(cfg: BootstrapConfig): Promise<BootstrapResult> 
   });
   server.getApp().use("/api", streamRouter);
 
+  // M2.5 — Composio SDK subscribe. Opt-in: starts only when both
+  // COMPOSIO_API_KEY and COMPOSIO_USER_ID are present in env. CI / tests
+  // skip this path (no real Composio project), so the api still boots
+  // cleanly without it. Failure to bootstrap triggers does NOT fail api
+  // startup — the demo can still serve HTTP/MCP traffic, just without
+  // inbound Slack routing.
+  let composioSubscriber: ComposioSubscriberHandle | undefined;
+  const composioApiKey = process.env.COMPOSIO_API_KEY?.trim();
+  const composioUserId = process.env.COMPOSIO_USER_ID?.trim();
+  if (composioApiKey && composioUserId) {
+    try {
+      composioSubscriber = await startComposioSubscriber({
+        apiKey: composioApiKey,
+        userId: composioUserId,
+        handlerDeps: {
+          slackPersonLinkRepo,
+          slackConversationSessionRepo,
+          personRepo,
+          agentRepo,
+          dispatchService,
+          botUserId: process.env.BEEVIBE_SLACK_BOT_USER_ID?.trim(),
+          extraMentionIds: process.env.BEEVIBE_SLACK_BOT_MENTION_IDS
+            ?.split(",")
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0),
+          demoPersonId: process.env.BEEVIBE_COMPOSIO_DEMO_PERSON_ID?.trim(),
+        },
+      });
+    } catch (err) {
+      console.error(
+        "[composio] subscriber startup failed (continuing without inbound Slack):",
+      );
+      // Walk the cause chain — Composio SDK wraps every error in a
+      // generic outer message ("Failed to subscribe to Pusher channel")
+      // and tucks the real cause under `.cause`. Log all levels.
+      let level = 0;
+      let current: unknown = err;
+      while (current && level < 6) {
+        const e = current as { message?: string; cause?: unknown; stack?: string };
+        console.error(`  [${level}]`, e.message ?? current);
+        current = e.cause;
+        level++;
+      }
+      if (err instanceof Error && err.stack) {
+        console.error("  stack:", err.stack.split("\n").slice(0, 8).join("\n"));
+      }
+    }
+  }
+
   const shutdown = async (): Promise<void> => {
     sessionCache.stopIdleSweep();
     await daemonOrphanReaper.stop();
     await sseListener.stop();
     await runtimeWsServer.stop();
+    if (composioSubscriber) {
+      await composioSubscriber.stop();
+    }
     await server.stop();
     await pool.end();
   };

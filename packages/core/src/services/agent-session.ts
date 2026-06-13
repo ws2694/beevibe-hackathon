@@ -163,10 +163,27 @@ export class AgentSession {
         (err as Error).message,
       );
     }
+    // Resolve sessionKind so chat sessions get the CHAT lifecycle reminder
+    // (concise, conversational) instead of the TASK reminder (which demands
+    // update_progress + create_work_product and reads as "you are running a
+    // ticketed task" — wrong for a Slack reply or a UI chat turn). Without
+    // this, the in-process executor would pin every session to the TASK
+    // lifecycle, leaving chat agents trying to call update_progress on a
+    // task_id they don't have, and making them ignore the user's message
+    // while they pattern-match to onboarding/task scripts.
+    const resolvedSessionType: SessionType =
+      input.type ?? (input.taskId ? "task" : "chat");
+    const sessionKind: "chat" | "task" =
+      resolvedSessionType === "chat" ? "chat" : "task";
     const system_prompt_append = composeSystemPromptAppend(
       agent.runtime_config.system_prompt_addition,
       briefing.systemPromptAppend,
-      input.extraSystemPromptAppend ? { extra: input.extraSystemPromptAppend } : {},
+      {
+        sessionKind,
+        ...(input.extraSystemPromptAppend
+          ? { extra: input.extraSystemPromptAppend }
+          : {}),
+      },
     );
     const intent = composeIntent(input.intent, briefing.userMessagePrefix);
 
